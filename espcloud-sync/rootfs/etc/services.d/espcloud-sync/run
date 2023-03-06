@@ -1,0 +1,15 @@
+#!/usr/bin/with-contenv bashio
+# ==============================================================================
+# Start the espcloud-sync service
+# s6-overlay docs: https://github.com/just-containers/s6-overlay
+# ==============================================================================
+
+bashio::log.info "Starting Espcloud-sync..."
+
+cf_access_id=$(bashio::config 'cf_access_id')
+cf_access_secret=$(bashio::config 'cf_access_secret')
+
+export CF_ACCESS_ID="${cf_access_id}"
+export CF_ACCESS_SECRET="${cf_access_secret}"
+
+exec python3 /usr/bin/sync.py

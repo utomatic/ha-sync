@@ -1,0 +1,22 @@
+# https://developers.home-assistant.io/docs/add-ons/configuration#add-on-config
+name: Espcloud-sync add-on
+version: "0.0.1"
+slug: espcloud-sync
+description: Espcloud add-on for Home Assistant
+url: "https://github.com/espcloud/ha-espcloud-sync/tree/main/espcloud-sync"
+arch:
+  - armhf
+  - armv7
+  - aarch64
+  - amd64
+  - i386
+init: false
+map:
+  - share:rw
+options:
+  cf_access_id: ''
+  cf_access_secret: ''
+schema:
+  cf_access_id: str?
+  cf_access_secret: str?
+image: "ghcr.io/espcloud/espcloud-sync-{arch}-addon"
