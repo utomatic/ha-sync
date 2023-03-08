@@ -4,11 +4,6 @@ ARG BUILD_ARCH=i386
 ARG TEMPIO_VERSION=2021.09.0
 FROM $BUILD_FROM
 
-# Execute during the build of the image
-#RUN \
-#    curl -sSLf -o /usr/bin/tempio \
-#    "https://github.com/home-assistant/tempio/releases/download/${TEMPIO_VERSION}/tempio_${BUILD_ARCH}"
-
 RUN \
     apt-get update \
     # Use pinned versions so that we get updates with build caching
