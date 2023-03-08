@@ -1,10 +1,12 @@
-import time
+import asyncio
+import logging
 import os
+import time
 
 import aioesphomeapi
-import asyncio
-
 import requests
+
+logging.basicConfig(level=logging.INFO)
 
 HOST = "https://espcloud.ovh/api"
 ACCESS_ID = os.getenv('CF_ACCESS_ID')
@@ -12,7 +14,8 @@ ACCESS_SECRET = os.getenv('CF_ACCESS_SECRET')
 RATE_LIMIT_SECS = 10
 
 if ACCESS_ID is None or ACCESS_SECRET is None:
-    print('CF Access ID or Secret not defined!')
+    logging.error('CF Access ID or Secret not defined!')
+
 
 def current_timestamp():
     return int(time.time())
@@ -32,7 +35,7 @@ class EspCloudAPI:
         self.last_upload_per_host.setdefault(entity_id, None)
         if self.last_upload_per_host[entity_id] == None or \
                 self.last_upload_per_host[entity_id] <= current_timestamp():
-            print(f"Uploading state for {device_id}:{entity_id}:{state}")
+            logging.debug(f"Uploading state for {device_id}:{entity_id}:{state}")
             r = requests.post(HOST + "/devices/states", json={
                 "entity_id": entity_id,
                 "state": state
@@ -55,7 +58,7 @@ class EspCloudAPI:
                     "entity_id": thing.name
                 })
 
-        print(f"Uploading Entities ot {device.name}")
+        logging.info(f"Uploading Entities of {device.name}")
         requests.post(HOST + "/entities/sync", json={
             "device_id": device.name,
             "entities": processed_entities
@@ -80,7 +83,7 @@ class EspProxyManager():
         device_id = device['device_id']
         device_host = device['hostname']
 
-        print(f"Connecting to {device_id}")
+        logging.info(f"Connecting to {device_id}")
         api = aioesphomeapi.APIClient(device_host, device['port'], device['password'])
 
         await api.connect(login=True)
@@ -100,12 +103,12 @@ class EspProxyManager():
             for thing in entity:
                 self._entity_key_to_uuid[thing.key] = thing.name
 
-        print(f"Connected to {device_id}")
+        logging.info(f"Connected to {device_id}")
 
         await api.subscribe_states(lambda state: self.subscribe_callback(device_id, state))
 
     async def run(self):
-        print("Retrieving devices...")
+        logging.info("Retrieving devices...")
         devices = self._espcloud_api.list_devices()
 
         for device in devices:

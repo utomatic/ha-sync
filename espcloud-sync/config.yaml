@@ -1,6 +1,6 @@
 # https://developers.home-assistant.io/docs/add-ons/configuration#add-on-config
 name: Espcloud-sync add-on
-version: "0.0.2"
+version: "0.0.3"
 slug: espcloud-sync
 description: Espcloud add-on for Home Assistant
 url: "https://github.com/espcloud/ha-espcloud-sync/tree/main/espcloud-sync"
