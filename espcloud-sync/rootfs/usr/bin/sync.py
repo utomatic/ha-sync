@@ -6,18 +6,19 @@ import time
 import aioesphomeapi
 import requests
 
-LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO').upper()
-logging.basicConfig(level=LOG_LEVEL)
-logging.basicConfig(format='[%(asctime)s] %(levelname)s: %(message)s', datefmt='%H:%M:%S')
-
-
-HOST = "https://espcloud.ovh/api"
 ACCESS_ID = os.getenv('CF_ACCESS_ID')
 ACCESS_SECRET = os.getenv('CF_ACCESS_SECRET')
+LOG_LEVEL = os.getenv('LOGLEVEL', 'INFO').upper()
+HOST = "https://espcloud.ovh/api"
 RATE_LIMIT_SECS = 10
 
+logging.basicConfig(format='[%(asctime)s] %(levelname)s: %(message)s', datefmt='%H:%M:%S')
+logger = logging.getLogger("espcloud")
+logger.setLevel(LOG_LEVEL)
+
+
 if ACCESS_ID is None or ACCESS_SECRET is None:
-    logging.error('CF Access ID or Secret not defined!')
+    logger.error('CF Access ID or Secret not defined!')
 
 
 def current_timestamp():
@@ -38,7 +39,7 @@ class EspCloudAPI:
         self.last_upload_per_host.setdefault(entity_id, None)
         if self.last_upload_per_host[entity_id] == None or \
                 self.last_upload_per_host[entity_id] <= current_timestamp():
-            logging.debug(f"Uploading state for {device_id}:{entity_id}:{state}")
+            logger.debug(f"Uploading state for {device_id}:{entity_id}:{state}")
             r = requests.post(HOST + "/devices/states", json={
                 "entity_id": entity_id,
                 "state": state
@@ -61,7 +62,7 @@ class EspCloudAPI:
                     "entity_id": thing.name
                 })
 
-        logging.info(f"Uploading Entities of {device.name}")
+        logger.info(f"Uploading Entities of {device.name}")
         requests.post(HOST + "/entities/sync", json={
             "device_id": device.name,
             "entities": processed_entities
@@ -86,7 +87,7 @@ class EspProxyManager():
         device_id = device['device_id']
         device_host = device['hostname']
 
-        logging.info(f"Connecting to {device_id}")
+        logger.info(f"Connecting to {device_id}")
         api = aioesphomeapi.APIClient(device_host, device['port'], device['password'])
 
         await api.connect(login=True)
@@ -106,12 +107,12 @@ class EspProxyManager():
             for thing in entity:
                 self._entity_key_to_uuid[thing.key] = thing.name
 
-        logging.info(f"Connected to {device_id}")
+        logger.info(f"Connected to {device_id}")
 
         await api.subscribe_states(lambda state: self.subscribe_callback(device_id, state))
 
     async def run(self):
-        logging.info("Retrieving devices...")
+        logger.info("Retrieving devices...")
         devices = self._espcloud_api.list_devices()
 
         for device in devices:
