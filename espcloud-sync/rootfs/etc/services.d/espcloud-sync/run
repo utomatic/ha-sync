@@ -8,8 +8,10 @@ bashio::log.info "Starting Espcloud-sync..."
 
 cf_access_id=$(bashio::config 'cf_access_id')
 cf_access_secret=$(bashio::config 'cf_access_secret')
+log_level=$(bashio::config 'log_level')
 
 export CF_ACCESS_ID="${cf_access_id}"
 export CF_ACCESS_SECRET="${cf_access_secret}"
+export LOG_LEVEL="${log_level}"
 
 exec python3 /usr/bin/sync.py

@@ -6,7 +6,10 @@ import time
 import aioesphomeapi
 import requests
 
-logging.basicConfig(level=logging.INFO)
+LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO').upper()
+logging.basicConfig(level=LOG_LEVEL)
+logging.basicConfig(format='[%(asctime)s] %(levelname)s: %(message)s', datefmt='%H:%M:%S')
+
 
 HOST = "https://espcloud.ovh/api"
 ACCESS_ID = os.getenv('CF_ACCESS_ID')
