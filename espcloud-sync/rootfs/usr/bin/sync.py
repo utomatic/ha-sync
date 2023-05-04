@@ -2,9 +2,11 @@ import asyncio
 import logging
 import os
 import time
+from datetime import datetime, timedelta
 
 import aioesphomeapi
 import requests
+from esphome.espota2 import run_ota
 
 ACCESS_ID = os.getenv('CF_ACCESS_ID')
 ACCESS_SECRET = os.getenv('CF_ACCESS_SECRET')
@@ -15,7 +17,6 @@ RATE_LIMIT_SECS = 10
 logging.basicConfig(format='[%(asctime)s] %(levelname)s: %(message)s', datefmt='%H:%M:%S')
 logger = logging.getLogger("espcloud")
 logger.setLevel(LOG_LEVEL)
-
 
 if ACCESS_ID is None or ACCESS_SECRET is None:
     logger.error('CF Access ID or Secret not defined!')
@@ -71,6 +72,22 @@ class EspCloudAPI:
             "CF-Access-Client-Secret": ACCESS_SECRET,
         })
 
+    def get_build_file(self, build_id):
+        r = requests.get(HOST + f"/builds/{build_id}", headers={
+            "CF-Access-Client-Id": ACCESS_ID,
+            "CF-Access-Client-Secret": ACCESS_SECRET,
+        })
+
+        # Just to make sure its not getting blocked in cf access
+        assert len(r.content) > 40000
+
+        path = f'/tmp/{build_id}.bin'
+
+        with open(path, 'wb') as f:
+            f.write(r.content)
+
+        return path
+
 
 class EspProxyManager():
     def __init__(self):
@@ -102,6 +119,13 @@ class EspProxyManager():
             "device_info": device_info,
             "entities": entities
         }
+        compilation_time = datetime.strptime(device_info.compilation_time, "%b %d %Y, %H:%M:%S")
+        last_build_time = (datetime.strptime(device['lastBuild']['created_at'], '%Y-%m-%dT%H:%M:%S.%fZ') - timedelta(
+            minutes=2))
+
+        if (last_build_time > compilation_time):
+            self.update_firmware(device)
+            return
 
         for entity in entities:
             for thing in entity:
@@ -117,6 +141,12 @@ class EspProxyManager():
 
         for device in devices:
             asyncio.create_task(self.listen_to_device(device))
+
+    def update_firmware(self, device):
+        logger.info('Starting OTA')
+        file_path = self._espcloud_api.get_build_file(device['lastBuild']['build_id'])
+        run_ota(device['hostname'], 8266, device['password'], file_path)
+        logger.info('Finished OTA')
 
 
 manager = EspProxyManager()

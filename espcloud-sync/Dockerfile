@@ -22,7 +22,7 @@ RUN \
         /var/{cache,log}/* \
         /var/lib/apt/lists/*
 
-RUN pip3 install aioesphomeapi requests
+RUN pip3 install aioesphomeapi==13.5.0 esphome==2023.3.0 requests==2.29.0
 
 # Copy root filesystem
 COPY rootfs /
