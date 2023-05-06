@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import math
 import os
 import time
 from datetime import datetime, timedelta
@@ -94,24 +95,57 @@ class EspProxyManager():
         self._espcloud_api = EspCloudAPI()
         self._registered_devices = {}
         self._entity_key_to_uuid = {}
+        self._devices = []
+        self._connections = {}
 
     def subscribe_callback(self, device_id, state):
+        # logger.info(f"Got state for {device_id}")
+
+        value = state.state
+        if math.isnan(value):
+            # logger.info(f"Got Nan for {device_id}")
+            value = None
+
         entity_id = self._entity_key_to_uuid[state.key]
 
-        self._espcloud_api.upload_states(device_id, entity_id, state.state)
+        self._espcloud_api.upload_states(device_id, entity_id, value)
 
-    async def listen_to_device(self, device):
+    async def device_disconnected(self, device, expected_disconnect: bool):
+        device_id = device['device_id']
+
+        if expected_disconnect:
+            logger.info(f"Got normal disconnect from {device_id}")
+        else:
+            logger.info(f"Got unexpected disconnect from {device_id}")
+
+        self._connections[device_id] = None
+        asyncio.create_task(self.listen_to_device(device))
+
+    async def get_connection(self, device):
         device_id = device['device_id']
         device_host = device['hostname']
 
-        logger.info(f"Connecting to {device_id}")
-        api = aioesphomeapi.APIClient(device_host, device['port'], device['password'])
+        if self._connections[device_id]:
+            self._connections[device_id]._check_connected()
+            logger.info(f"Reusing previous connection {device_id}")
 
-        await api.connect(login=True)
+        else:
+            logger.info(f"Connecting to {device_id}")
+            self._connections[device_id] = aioesphomeapi.APIClient(device_host, device['port'], device['password'])
 
-        device_info = await api.device_info()
+            # await api.connect(login=True, on_stop=self.device_disconnected)
+            await self._connections[device_id].connect(login=True, on_stop=(
+                lambda expected_disconnect: self.device_disconnected(device, expected_disconnect)))
 
-        entities = await api.list_entities_services()
+        return self._connections[device_id]
+
+    async def listen_to_device(self, device):
+        device_id = device['device_id']
+        conn = await self.get_connection(device)
+
+        device_info = await conn.device_info()
+
+        entities = await conn.list_entities_services()
 
         self._espcloud_api.update_devices_and_entities(device_info, entities)
 
@@ -119,13 +153,6 @@ class EspProxyManager():
             "device_info": device_info,
             "entities": entities
         }
-        compilation_time = datetime.strptime(device_info.compilation_time, "%b %d %Y, %H:%M:%S")
-        last_build_time = (datetime.strptime(device['lastBuild']['created_at'], '%Y-%m-%dT%H:%M:%S.%fZ') - timedelta(
-            minutes=2))
-
-        if (last_build_time > compilation_time):
-            self.update_firmware(device)
-            return
 
         for entity in entities:
             for thing in entity:
@@ -133,29 +160,70 @@ class EspProxyManager():
 
         logger.info(f"Connected to {device_id}")
 
-        await api.subscribe_states(lambda state: self.subscribe_callback(device_id, state))
+        await self._connections[device_id].subscribe_states(lambda state: self.subscribe_callback(device_id, state))
 
     async def run(self):
-        logger.info("Retrieving devices...")
-        devices = self._espcloud_api.list_devices()
-
-        for device in devices:
+        tasks = [
             asyncio.create_task(self.listen_to_device(device))
+            for device in self._devices
+        ]
 
-    def update_firmware(self, device):
+        for task in tasks:
+            await task
+
+    async def update_firmware(self, device):
         logger.info('Starting OTA')
         file_path = self._espcloud_api.get_build_file(device['lastBuild']['build_id'])
         run_ota(device['hostname'], 8266, device['password'], file_path)
         logger.info('Finished OTA')
 
+    async def retrieve_devices(self):
+        logger.info('Retrieving devices...')
+        self._devices = self._espcloud_api.list_devices()
 
-manager = EspProxyManager()
+        for device in self._devices:
+            device_id = device['device_id']
+            if device_id not in self._connections:
+                self._connections[device_id] = None
+
+    async def check_for_updates(self):
+        await self.retrieve_devices()
+        logger.info('Checking for updates...')
+
+        for device in self._devices:
+            conn = await self.get_connection(device)
+
+            device_info = await conn.device_info()
+
+            compilation_time = datetime.strptime(device_info.compilation_time, "%b %d %Y, %H:%M:%S")
+            last_build_time = (
+                    datetime.strptime(device['lastBuild']['created_at'], '%Y-%m-%dT%H:%M:%S.%fZ') - timedelta(
+                minutes=2))
+
+            if last_build_time > compilation_time:
+                await self.update_firmware(device)
+
+
+async def main():
+    manager = EspProxyManager()
+
+    # Check for updates before starting device's sync, this automatically update devices list
+    await asyncio.create_task(manager.check_for_updates())
+
+    # Connect to device's
+    asyncio.ensure_future(manager.run())
+
+    # Check for updates sporadically
+    while True:
+        await asyncio.sleep(30)
+        await asyncio.create_task(manager.check_for_updates())
+
 
 loop = asyncio.get_event_loop()
 try:
-    asyncio.ensure_future(manager.run())
-    loop.run_forever()
+    asyncio.run(main())
 except KeyboardInterrupt:
     pass
 finally:
+    print('Closing Sync Server...')
     loop.close()
