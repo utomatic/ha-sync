@@ -3,9 +3,6 @@ configuration:
   log_level:
     name: Log level
     description: The amount of logging the add-on should do.
-  cf_access_id:
-    name: CF ACCESS ID
-    description: Access id.
-  cf_access_secret:
-    name: CF ACCESS SECRET
-    description: Access secret.
+  api_token:
+    name: API Token
+    description: API Token for your account.

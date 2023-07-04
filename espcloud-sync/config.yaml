@@ -1,6 +1,6 @@
 # https://developers.home-assistant.io/docs/add-ons/configuration#add-on-config
 name: Espcloud-sync add-on
-version: "0.0.5"
+version: "0.0.6"
 slug: espcloud-sync
 description: Espcloud add-on for Home Assistant
 url: "https://github.com/espcloud/ha-espcloud-sync/tree/main/espcloud-sync"
@@ -14,10 +14,8 @@ init: false
 map:
   - share:rw
 options:
-  cf_access_id: ''
-  cf_access_secret: ''
+  api_token: ''
 schema:
-  cf_access_id: str?
-  cf_access_secret: str?
+  api_token: str
   log_level: list(debug|info|warning|error)?
 image: "ghcr.io/espcloud/espcloud-sync-{arch}-addon"

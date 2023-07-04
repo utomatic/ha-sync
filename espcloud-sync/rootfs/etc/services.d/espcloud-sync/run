@@ -14,11 +14,9 @@ then
 fi
 
 
-cf_access_id=$(bashio::config 'cf_access_id')
-cf_access_secret=$(bashio::config 'cf_access_secret')
+api_token=$(bashio::config 'api_token')
 
-export CF_ACCESS_ID="${cf_access_id}"
-export CF_ACCESS_SECRET="${cf_access_secret}"
+export API_TOKEN="${api_token}"
 
 
 exec python3 /usr/bin/sync.py

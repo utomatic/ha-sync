@@ -9,8 +9,7 @@ import aioesphomeapi
 import requests
 from esphome.espota2 import run_ota
 
-ACCESS_ID = os.getenv('CF_ACCESS_ID')
-ACCESS_SECRET = os.getenv('CF_ACCESS_SECRET')
+API_TOKEN = os.getenv('API_TOKEN')
 LOG_LEVEL = os.getenv('LOGLEVEL', 'INFO').upper()
 HOST = "https://espcloud.ovh/api"
 RATE_LIMIT_SECS = 10
@@ -19,8 +18,8 @@ logging.basicConfig(format='[%(asctime)s] %(levelname)s: %(message)s', datefmt='
 logger = logging.getLogger("espcloud")
 logger.setLevel(LOG_LEVEL)
 
-if ACCESS_ID is None or ACCESS_SECRET is None:
-    logger.error('CF Access ID or Secret not defined!')
+if API_TOKEN is None:
+    logger.error('API Token is required!')
 
 
 def current_timestamp():
@@ -32,8 +31,7 @@ class EspCloudAPI:
 
     def list_devices(self):
         r = requests.get(HOST + "/devices", headers={
-            "CF-Access-Client-Id": ACCESS_ID,
-            "CF-Access-Client-Secret": ACCESS_SECRET,
+            "Authorization": f"Bearer {API_TOKEN}",
         })
         return r.json()['result']
 
@@ -46,8 +44,7 @@ class EspCloudAPI:
                 "entity_id": entity_id,
                 "state": state
             }, headers={
-                "CF-Access-Client-Id": ACCESS_ID,
-                "CF-Access-Client-Secret": ACCESS_SECRET,
+                "Authorization": f"Bearer {API_TOKEN}",
             })
 
             self.last_upload_per_host[entity_id] = current_timestamp() + RATE_LIMIT_SECS
@@ -69,14 +66,12 @@ class EspCloudAPI:
             "device_id": device.name,
             "entities": processed_entities
         }, headers={
-            "CF-Access-Client-Id": ACCESS_ID,
-            "CF-Access-Client-Secret": ACCESS_SECRET,
+            "Authorization": f"Bearer {API_TOKEN}",
         })
 
     def get_build_file(self, build_id):
         r = requests.get(HOST + f"/builds/{build_id}", headers={
-            "CF-Access-Client-Id": ACCESS_ID,
-            "CF-Access-Client-Secret": ACCESS_SECRET,
+            "Authorization": f"Bearer {API_TOKEN}",
         })
 
         # Just to make sure its not getting blocked in cf access
