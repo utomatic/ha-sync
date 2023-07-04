@@ -14,7 +14,7 @@ RUN \
         python3-pil=8.1.2+dfsg-0.3+deb11u1 \
         python3-cryptography=3.3.2-1 \
         iputils-ping=3:20210202-1 \
-        git=1:2.20.1-2+deb10u8 \
+        git \
         curl \
         openssh-client=1:8.4p1-5+deb11u1 \
     && rm -rf \
