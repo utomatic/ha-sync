@@ -11,7 +11,7 @@ from esphome.espota2 import run_ota
 
 API_TOKEN = os.getenv('API_TOKEN')
 LOG_LEVEL = os.getenv('LOGLEVEL', 'INFO').upper()
-HOST = "https://espcloud.ovh/api"
+HOST = os.getenv('HOST', 'https://espcloud.ovh') + "/api"
 RATE_LIMIT_SECS = 10
 
 logging.basicConfig(format='[%(asctime)s] %(levelname)s: %(message)s', datefmt='%H:%M:%S')
@@ -70,7 +70,7 @@ class EspCloudAPI:
         })
 
     def get_build_file(self, build_id):
-        r = requests.get(HOST + f"/builds/{build_id}", headers={
+        r = requests.get(HOST + f"/builds/{build_id}/download", headers={
             "Authorization": f"Bearer {API_TOKEN}",
         })
 
@@ -94,7 +94,7 @@ class EspProxyManager():
         self._connections = {}
 
     def subscribe_callback(self, device_id, state):
-        # logger.info(f"Got state for {device_id}")
+        logger.info(f"Got state for {device_id}")
 
         value = state.state
         if math.isnan(value):

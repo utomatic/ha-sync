@@ -15,8 +15,10 @@ fi
 
 
 api_token=$(bashio::config 'api_token')
+host=$(bashio::config 'host')
 
 export API_TOKEN="${api_token}"
+export HOST="${host}"
 
 
 exec python3 /usr/bin/sync.py

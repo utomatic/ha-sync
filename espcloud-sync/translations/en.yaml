@@ -6,3 +6,6 @@ configuration:
   api_token:
     name: API Token
     description: API Token for your account.
+  host:
+    name: Host
+    description: Host overwrite.
