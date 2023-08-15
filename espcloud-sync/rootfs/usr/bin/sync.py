@@ -41,6 +41,7 @@ class EspCloudAPI:
                 self.last_upload_per_host[entity_id] <= current_timestamp():
             logger.debug(f"Uploading state for {device_id}:{entity_id}:{state}")
             r = requests.post(HOST + "/devices/states", json={
+                "device_id": device_id,
                 "entity_id": entity_id,
                 "state": state
             }, headers={
@@ -63,7 +64,7 @@ class EspCloudAPI:
 
         logger.info(f"Uploading Entities of {device.name}")
         requests.post(HOST + "/entities/sync", json={
-            "device_id": device.name,
+            "device_id": device.friendly_name,
             "entities": processed_entities
         }, headers={
             "Authorization": f"Bearer {API_TOKEN}",
@@ -151,7 +152,7 @@ class EspProxyManager():
 
         for entity in entities:
             for thing in entity:
-                self._entity_key_to_uuid[thing.key] = thing.name
+                self._entity_key_to_uuid[thing.key] = str(thing.name).replace('_', '-')
 
         logger.info(f"Connected to {device_id}")
 
