@@ -11,7 +11,12 @@ from esphome.espota2 import run_ota
 
 API_TOKEN = os.getenv('API_TOKEN')
 LOG_LEVEL = os.getenv('LOGLEVEL', 'INFO').upper()
-HOST = os.getenv('HOST', 'https://espcloud.ovh') + "/api"
+
+HOST = os.getenv('HOST', '')  # HA default is empty string
+if HOST.strip() == '':
+    HOST = 'https://espcloud.ovh'
+HOST += "/api"
+
 RATE_LIMIT_SECS = 10
 
 logging.basicConfig(format='[%(asctime)s] %(levelname)s: %(message)s', datefmt='%H:%M:%S')
