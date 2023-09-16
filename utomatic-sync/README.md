@@ -1,4 +1,4 @@
-# Espcloud add-on for Home Assistant
+# utomatic add-on for Home Assistant
 
 // TODO
 

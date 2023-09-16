@@ -1,4 +1,4 @@
 # https://developers.home-assistant.io/docs/add-ons/repository#repository-configuration
-name: Espcloud add-on for Home Assistant
-url: 'https://github.com/espcloud/ha-espcloud-sync'
-maintainer: Espcloud <test@example.com>
+name: utomatic add-on for Home Assistant
+url: 'https://github.com/utomatic/ha-sync'
+maintainer: utomatic <contact@utomatic.dev>

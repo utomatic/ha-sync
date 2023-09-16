@@ -14,13 +14,14 @@ LOG_LEVEL = os.getenv('LOGLEVEL', 'INFO').upper()
 
 HOST = os.getenv('HOST', '')  # HA default is empty string
 if HOST.strip() == '':
-    HOST = 'https://espcloud.ovh'
-HOST += "/api"
+    HOST = 'https://api.utomatic.dev'
+
+HOST += "/v1"
 
 RATE_LIMIT_SECS = 10
 
 logging.basicConfig(format='[%(asctime)s] %(levelname)s: %(message)s', datefmt='%H:%M:%S')
-logger = logging.getLogger("espcloud")
+logger = logging.getLogger("utomatic")
 logger.setLevel(LOG_LEVEL)
 
 if API_TOKEN is None:
@@ -31,7 +32,7 @@ def current_timestamp():
     return int(time.time())
 
 
-class EspCloudAPI:
+class SyncAPI:
     last_upload_per_host = {}
 
     def list_devices(self):
@@ -93,7 +94,7 @@ class EspCloudAPI:
 
 class EspProxyManager():
     def __init__(self):
-        self._espcloud_api = EspCloudAPI()
+        self._utomatic_api = SyncAPI()
         self._registered_devices = {}
         self._entity_key_to_uuid = {}
         self._devices = []
@@ -109,7 +110,7 @@ class EspProxyManager():
 
         entity_id = self._entity_key_to_uuid[state.key]
 
-        self._espcloud_api.upload_states(device_id, entity_id, value)
+        self._utomatic_api.upload_states(device_id, entity_id, value)
 
     async def device_disconnected(self, device, expected_disconnect: bool):
         device_id = device['device_id']
@@ -148,7 +149,7 @@ class EspProxyManager():
 
         entities = await conn.list_entities_services()
 
-        self._espcloud_api.update_devices_and_entities(device_info, entities)
+        self._utomatic_api.update_devices_and_entities(device_info, entities)
 
         self._registered_devices[device_id] = {
             "device_info": device_info,
@@ -174,13 +175,13 @@ class EspProxyManager():
 
     async def update_firmware(self, device):
         logger.info('Starting OTA')
-        file_path = self._espcloud_api.get_build_file(device['lastBuild']['build_id'])
+        file_path = self._utomatic_api.get_build_file(device['lastBuild']['build_id'])
         run_ota(device['hostname'], 8266, device['password'], file_path)
         logger.info('Finished OTA')
 
     async def retrieve_devices(self):
         logger.info('Retrieving devices...')
-        self._devices = self._espcloud_api.list_devices()
+        self._devices = self._utomatic_api.list_devices()
 
         for device in self._devices:
             device_id = device['device_id']

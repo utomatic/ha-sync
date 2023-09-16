@@ -1,9 +1,9 @@
 # https://developers.home-assistant.io/docs/add-ons/configuration#add-on-config
-name: Espcloud-sync add-on
-version: "0.0.10"
-slug: espcloud-sync
-description: Espcloud add-on for Home Assistant
-url: "https://github.com/espcloud/ha-espcloud-sync/tree/main/espcloud-sync"
+name: utomatic-sync
+version: "0.0.11"
+slug: utomatic-sync
+description: utomatic add-on for Home Assistant
+url: "https://github.com/utomatic/ha-sync/tree/main/utomatic-sync"
 arch:
   - armhf
   - armv7
@@ -20,4 +20,4 @@ schema:
   api_token: str
   host: str?
   log_level: list(debug|info|warning|error)?
-image: "ghcr.io/espcloud/espcloud-sync-{arch}-addon"
+image: "ghcr.io/utomatic/utomatic-sync-{arch}-addon"

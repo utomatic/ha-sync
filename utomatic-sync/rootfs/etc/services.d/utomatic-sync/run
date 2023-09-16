@@ -1,10 +1,10 @@
 #!/usr/bin/with-contenv bashio
 # ==============================================================================
-# Start the espcloud-sync service
+# Start the utomatic-sync service
 # s6-overlay docs: https://github.com/just-containers/s6-overlay
 # ==============================================================================
 
-bashio::log.info "Starting Espcloud-sync..."
+bashio::log.info "Starting utomatic-sync..."
 
 log_level=$(bashio::config 'log_level')
 

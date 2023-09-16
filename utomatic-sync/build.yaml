@@ -6,9 +6,9 @@ build_from:
   armv7: "ghcr.io/home-assistant/armv7-base-debian:bullseye"
   i386: "ghcr.io/home-assistant/i386-base-debian:bullseye"
 labels:
-  org.opencontainers.image.title: "Espcloud add-on for Home Assistant"
-  org.opencontainers.image.description: "Espcloud add-on for Home Assistant."
-  org.opencontainers.image.source: "https://github.com/espcloud/ha-espcloud-sync"
+  org.opencontainers.image.title: "utomatic add-on for Home Assistant"
+  org.opencontainers.image.description: "utomatic add-on for Home Assistant."
+  org.opencontainers.image.source: "https://github.com/utomatic/ha-sync"
   org.opencontainers.image.licenses: "Apache License 2.0"
 args:
   TEMPIO_VERSION: "2021.09.0"
